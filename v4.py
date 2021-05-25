@@ -265,22 +265,22 @@ for m in range(drop_num):
     ax3.plot(position[m][1], height[m] , '.', color = colors[m], label = str(m))
     if m ==2:
 
-        velocity.append(-0.71)
-        time.append(time[-1]+1)
-        ax4.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m],  label = r'\textrm{Data}')
+        #velocity.append(-0.71)
+        #time.append(time[-1]+1)
+        ax4.plot(np.asarray(time), np.asarray(velocity)*1.39, '.', color = colors[m],  label = r'\textrm{Data}')
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m], label = r'\textrm{Data}')
-        ax4.plot(np.asarray(time[:-1])/0.5,prefactor[m]*(0.02033/0.005)*(np.asarray(heights))*grads/rad, color = 'k', label = r'\textrm{Model}')
+        ax4.plot(np.asarray(time[:-1]),prefactor[m]*(0.02033/0.005)*(np.asarray(heights))*grads/rad, color = 'k', label = r'\textrm{Model}')
         #ax5.plot(time2, velocity2)
 
     else:
-        ax4.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m])
+        ax4.plot(np.asarray(time), np.asarray(velocity)*1.39, '.', color = colors[m])
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m])
         #ax5.plot(time2, velocity2)
-        ax4.plot(np.asarray(time)/0.5,prefactor[m]*(0.02033/0.005)*(np.asarray(heights))*grads/rad, color = 'k')
+        ax4.plot(np.asarray(time),prefactor[m]*(0.02033)*(np.asarray(heights))*grads/rad, color = 'k')
     #ax5.plot(np.asarray(time2)/0.5,prefactor[m]*(0.02033/0.005)*(np.asarray(heights2))*grads2/rad2, color = colors[m])
 
 #ax5.set_xlabel(r'$\textrm{Time} /\textrm{s}$', fontsize = 24)
