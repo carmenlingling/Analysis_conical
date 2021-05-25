@@ -251,17 +251,18 @@ for m in range(drop_num):
     #time2, position2, velocity2, heights2, rad2, grads2 = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 5)
     #time, positions, velocity, heights = velocitycalcsmooth(position[m][0], position[m][1], height[m])
 
-    ax.plot(position[m][0], position[m][1], color = colors[m])
-    ax.plot(position[m][0], position_2[m])
+    #ax.plot(time, position[m][1], color = colors[m])
+    #ax.plot(time, position_2[m])
     ax.plot(time, positions, '.', color = colors[m])
+    print(data_pipette)
     r = np.polyval(data_pipette, positions)
     grade = np.polyval(np.polyder(data_pipette), positions)
-    ax2.plot(positions, r)
+    #ax2.plot(positions, r)
     #ax2.plot(positions, rad)
-    #ax2.plot(positions, grads)
+    ax2.plot(time, grade)
     #ax2.plot(positions, grade)
     #ax3.plot(positions, velocity,color = colors[m], label = str(m))
-    ax3.plot(positions, heights, color = colors[m], label = str(m))
+    ax3.plot(time, heights, color = colors[m], label = str(m))
     ax3.plot(position[m][1], height[m] , '.', color = colors[m], label = str(m))
     if m ==2:
 
@@ -285,7 +286,7 @@ for m in range(drop_num):
 
 #ax5.set_xlabel(r'$\textrm{Time} /\textrm{s}$', fontsize = 24)
 ax.set_ylabel('Position from pipette tip')
-#ax5.set_ylabel(r'$\textrm{Velocity}$ / $\mu \textrm{m s}^{-1}$', fontsize = 24,)
+ax3.set_ylabel(r'$h$', fontsize = 24,)
 ax4.set_xlabel(r'$\textrm{Time} /\textrm{s}$ ', fontsize = 24)
 ax4.set_ylabel(r'$\textrm{Velocity}$ / $\mu \textrm{m s}^{-1}$', fontsize = 24)
 #ax4.set_ylim(3, 14)
