@@ -217,10 +217,17 @@ ax2 = fig2.add_subplot(111)
 ax2.set_xlabel('Frame #')
 ax2.set_ylabel('z (pixels)')
 
+import pims
+def ImportStack(directory):
+    frames = pims.TiffStack(directory)
+    return frames
+
+
 path_two = directory + '/' + fileNames[1]
-nextim = plt.imread(path_two, 0)
+frames = ImportStack(path_two)
+nextim = frames[0]
 nextsobel = sobel(np.fliplr(nextim))
-two  = fill_pipette(nextsobel/nextsobel.max(), 0.2)
+two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
 plt.imshow(two)
 
 
@@ -238,15 +245,17 @@ plt.show()
 ############################Finding droplet positions###################
 
 
-slices = np.empty(((len(fileNames)-1)*3,binary.shape[1]))
+slices = np.empty(((len(frames)-1)*3,binary.shape[1]))
 positions = []
-frames = []
+times = []
 position = []
 profile = []
 #print((len(fileNames)-750)*3)
-for k in range(len(fileNames)-2):
-    next_path = directory + '/'+fileNames[k+2]
-    nextim = np.fliplr(plt.imread(next_path, 0))
+for k in range(len(frames)):
+
+    nextim = np.fliplr(frames[k])
+    #plt.imshow(nextim)
+    #plt.show()
     nextsobel = sobel(nextim)
     two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
     #plt.imshow(two)
@@ -254,13 +263,13 @@ for k in range(len(fileNames)-2):
 
     x2,y2, top2, bottom2 = collapse(two)
     line = (np.asarray(top2)+np.asarray(bottom2))/2
-    for item in range(len(line)):
-        slices[(k*3):(k*3)+3,item]=nextim[int(line[item])-1:int(line[item])+2, item]
+    '''for item in range(len(line)):
+        slices[(k*3):(k*3)+3,item]=nextim[int(line[item])-1:int(line[item])+2, item]'''
     #plt.plot(np.asarray(x2), np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2)))
 
     profile.append(np.ndarray.tolist(np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2))))
     position.append(x2)
-    frames.append(k)
+    times.append(k)
 print(position)
 length = len(sorted(profile,key=len, reverse=True)[0])
 print(length)
@@ -271,7 +280,7 @@ profile_array = np.array([hi+[-555]*(length-len(hi)) for hi in profile])
 
 np.savetxt(directory + '/' + 'profile.csv', profile_array)
 np.savetxt(directory + '/' + 'horizontal.csv', pos_array)
-np.savetxt(directory + '/' + 'frames.csv', frames)
+np.savetxt(directory + '/' + 'frames.csv', times)
 np.savetxt(directory + '/' + 'pipette2.csv', fit)
 '''
 plt.savefig(directory+ '/'+'positions.eps')
@@ -280,18 +289,8 @@ plt.show()
 ra = np.r_[np.linspace(0,0.9, int(len(frames)/50)), np.linspace(0, 0.9, int(len(frames)/50))]
 c = plt.get_cmap("plasma")
 colors = c(ra)
+plt.plot(pos_array,profile_array)
 
-#3D plots
-'''
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for k in range(int(len(frames)/50)):
-    ax.plot(position[k*50], profile[k*50], frames[k*50], color = colors[k])
-ax.set_xlabel('Position from tip')
-ax.set_ylabel('Height')
-ax.set_zlabel('Frame number')
-plt.show()'''
 ################################################
 '''#plotting visual of images and saving data#########
 

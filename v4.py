@@ -57,7 +57,7 @@ class SelectFromCollection(object):
 
         self.poly = PolygonSelector(ax, self.onselect)
         self.ind = []
-        
+
 
     def onselect(self, verts):
         path = Path(verts)
@@ -74,7 +74,7 @@ class SelectFromCollection(object):
         self.canvas.draw_idle()
 
 
-def SelectData(data, drops, heights, gradients, rs, pos2):
+def SelectData(data,times, drops, heights, gradients, rs, pos2):
 
 
     print("\nSelect points in the figure by enclosing them within a polygon.")
@@ -91,18 +91,18 @@ def SelectData(data, drops, heights, gradients, rs, pos2):
         if __name__ == '__main__':
 
             fig, ax = plt.subplots()
-            xs = np.repeat(np.arange(data.shape[0]),data.shape[1])
-            spots = ax.scatter(xs, data)
+            #xs = np.repeat(np.arange(data.shape[0]),data.shape[1])
+            spots = ax.scatter(times, data)
 
             selector = SelectFromCollection(ax, spots)
             ax.set_ylim([0, 1300])
-            
+
             plt.show()
 
             selector.disconnect()
 
             # After figure is closed print the coordinates of the selected points
-        
+
             datam = selector.xys[selector.ind]
             new_height = heights.flat[selector.ind]
             new_grad = gradients.flat[selector.ind]
@@ -122,7 +122,7 @@ def SelectData(data, drops, heights, gradients, rs, pos2):
         ax2.plot(position[m][0], height[m])
 
     plt.show()'''
-    
+
 
     return position, height, grad, radii, position2
 
@@ -150,7 +150,7 @@ def velocitycalc(times,positions,heights, rad, grad, average_number):
         newheights.append(np.polyval(a, time))
         newrad.append(np.polyval(b, time))
         newgrad.append(np.polyval(c, time))
-    
+
     return(newtimes, newposition, newvelocity, newheights, newrad, newgrad)
 
 def velocitycalc_noheight(times,positions, average_number):
@@ -166,22 +166,22 @@ def velocitycalc_noheight(times,positions, average_number):
         #newposition.append(np.polyval(p, time))
         newposition.append(((time)*p[0]+(p[1])))
         newvelocity.append(2*p[0])
-    
-    
+
+
     return(newtimes, newposition, newvelocity)
 
 def velocitycalcsmooth(times,positions, heights):
     newtimes = times
-    
 
-    
+
+
     p = np.polyfit(times, (positions), 2)
-    
+
     newposition = np.polyval(p, times)
     a = np.polyfit(times, heights, 2)
     newvelocity=(np.polyval(np.polyder(p), newposition))
     newheight = np.polyval(a,times)
-    
+
     return(newtimes, newposition, newvelocity, newheight )
 
 '''data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/500_500ms_22012018_1/position2.csv')
@@ -191,13 +191,14 @@ data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh pro
 data_height = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1000_500ms_23012018_2_pipette/heights2.csv')
 data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1000_500ms_23012018_2_pipette/pipette2.csv')'''
 #data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1500_500ms_23012019_1/output.csv')
-
-data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/12032019/5000_01s_12032019_zoom_1/zoom/drop_positions_raw.csv')
-data_height = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/12032019/5000_01s_12032019_zoom_1/zoom/drop_height_raw.csv')
-data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/12032019/5000_01s_12032019_zoom_1/zoom/pipette2.csv')
-gradients = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/12032019/5000_01s_12032019_zoom_1/zoom/gradients_raw.csv')
-rs = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/12032019/5000_01s_12032019_zoom_1/zoom/drop_piprad_raw.csv')
-
+directory = '/Users/carmenlee/Desktop/12032019_zoom1/'
+data = np.genfromtxt(directory+'drop_positions.csv')
+data_height = np.genfromtxt(directory+'drop_height.csv')
+data_pipette = np.genfromtxt(directory+'pipette2.csv')
+gradients = np.genfromtxt(directory+'gradients.csv')
+rs = np.genfromtxt(directory+'drop_piprad.csv')
+timedata = np.genfromtxt(directory+ 'times.csv')
+print(timedata)
 #data2 = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/01022019/zoom/drops.csv')
 '''
 data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/01022019/zoom_single/drop_positions.csv')
@@ -215,7 +216,7 @@ print(data.shape)
 
 #data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/2000_500ms_22012018_3_pipette/pipette.csv')
 
-plt.plot(range(len(data)), data, '.')
+plt.plot(timedata, data, '.')
 #plt.plot(range(len(data2)), data2)
 plt.plot(range(len(data)), np.polyval(data_pipette, data))
 plt.show()
@@ -224,7 +225,7 @@ plt.show()
 
 drop_num = int(input('How many droplets do you see?'))
 
-position, height, grad, radii, position_2 = SelectData(data, drop_num, data_height,gradients, rs, data)
+position, height, grad, radii, position_2 = SelectData(data,timedata, drop_num, data_height,gradients, rs, data)
 print(position_2[0])
 fig = plt.figure(1)
 ax = fig.add_subplot(111)
@@ -244,7 +245,7 @@ ax5 = fig5.add_subplot(111)'''
 ra = np.r_[np.linspace(0,0.9, len(position)), np.linspace(0, 0.9, len(position))]
 c = plt.get_cmap("viridis")
 colors = c(ra)
-prefactor = [12.2,15, 9.3]
+prefactor = [1,1,1]
 for m in range(drop_num):
     time, positions, velocity, heights, rad, grads = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 30)
     #time2, position2, velocity2, heights2, rad2, grads2 = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 5)
@@ -263,7 +264,7 @@ for m in range(drop_num):
     ax3.plot(positions, heights, color = colors[m], label = str(m))
     ax3.plot(position[m][1], height[m] , '.', color = colors[m], label = str(m))
     if m ==2:
-        
+
         velocity.append(-0.71)
         time.append(time[-1]+1)
         ax4.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m],  label = r'\textrm{Data}')
@@ -272,7 +273,7 @@ for m in range(drop_num):
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m], label = r'\textrm{Data}')
         ax4.plot(np.asarray(time[:-1])/0.5,prefactor[m]*(0.02033/0.005)*(np.asarray(heights))*grads/rad, color = 'k', label = r'\textrm{Model}')
         #ax5.plot(time2, velocity2)
-        
+
     else:
         ax4.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m])
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
