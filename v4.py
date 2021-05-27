@@ -191,7 +191,7 @@ data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh pro
 data_height = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1000_500ms_23012018_2_pipette/heights2.csv')
 data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1000_500ms_23012018_2_pipette/pipette2.csv')'''
 #data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1500_500ms_23012019_1/output.csv')
-directory = '/Users/carmenlee/Desktop/12032019_zoom1/'
+directory = '/Users/carmenlee/Desktop/13082020_pip1_1/'
 data = np.genfromtxt(directory+'drop_positions.csv')
 data_height = np.genfromtxt(directory+'drop_height.csv')
 data_pipette = np.genfromtxt(directory+'pipette2.csv')
@@ -247,7 +247,7 @@ c = plt.get_cmap("viridis")
 colors = c(ra)
 prefactor = [1,1,1]
 for m in range(drop_num):
-    time, positions, velocity, heights, rad, grads = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 30)
+    time, positions, velocity, heights, rad, grads = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 10)
     #time2, position2, velocity2, heights2, rad2, grads2 = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 5)
     #time, positions, velocity, heights = velocitycalcsmooth(position[m][0], position[m][1], height[m])
 
@@ -259,24 +259,24 @@ for m in range(drop_num):
     grade = np.polyval(np.polyder(data_pipette), positions)
     #ax2.plot(positions, r)
     #ax2.plot(positions, rad)
-    ax2.plot(time, grade)
-    #ax2.plot(positions, grade)
+    ax2.plot(positions, grade)
+    ax2.plot(positions, grads)
     #ax3.plot(positions, velocity,color = colors[m], label = str(m))
-    ax3.plot(time, heights, color = colors[m], label = str(m))
+    #ax3.plot(positions, heights, color = colors[m], label = str(m))
     ax3.plot(position[m][1], height[m] , '.', color = colors[m], label = str(m))
     if m ==2:
 
         #velocity.append(-0.71)
         #time.append(time[-1]+1)
-        ax4.plot(np.asarray(time), np.asarray(velocity)*1.39, '.', color = colors[m],  label = r'\textrm{Data}')
+        ax4.plot(np.asarray(time), np.asarray(velocity)*3.69, '.', color = colors[m],  label = r'\textrm{Data}')
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m], label = r'\textrm{Data}')
-        ax4.plot(np.asarray(time[:-1]),prefactor[m]*(0.02033/0.005)*(np.asarray(heights))*grads/rad, color = 'k', label = r'\textrm{Model}')
+        ax4.plot(np.asarray(time),prefactor[m]*(0.02033)*(np.asarray(heights))*grads/rad, color = 'k', label = r'\textrm{Model}')
         #ax5.plot(time2, velocity2)
 
     else:
-        ax4.plot(np.asarray(time), np.asarray(velocity)*1.39, '.', color = colors[m])
+        ax4.plot(np.asarray(time), np.asarray(velocity)*3.69, '.', color = colors[m])
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m])

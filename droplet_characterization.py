@@ -7,14 +7,14 @@ import matplotlib.pyplot as plt
 
 #Switch these out for the appropriate files
 
-directory = '/Users/carmenlee/Desktop/12032019_zoom1/'
+directory = '/Users/carmenlee/Desktop/13082020_pip1_1/'
 profile = np.genfromtxt(directory +'profile.csv')
 horizontal = np.genfromtxt(directory +'horizontal.csv')
 frame = np.genfromtxt(directory +'frames.csv')
 pipette  =np.genfromtxt(directory +'pipette2.csv')
-time_raw =directory+'zoom1_meta.csv'
+time_raw =directory+'metadata.txt'
 import metadata_reader
-timedata = metadata_reader.scrapy(time_raw)
+timedata = metadata_reader.read_txtfile(time_raw)[548:]
 print(len(profile), len(timedata))
 ############################################
 # Homemade functions
@@ -96,12 +96,14 @@ ax2 = fig.add_subplot(212)
 fig2 =plt.figure(2)
 ax = fig2.add_subplot(111)
 
-start = 121
+start = 1
 avg_interval = 10
 half_interval = 5
 smooth_interval= 30
 half_smo_interval = 15
-for k in range(int(len(profile))-start):
+for k in range(268):
+#for k in range(int(len(profile))-start):
+
     prof_smooth = []
     hzt = []
     thresh = []
@@ -140,8 +142,8 @@ for k in range(int(len(profile))-start):
         ax2.plot(spot[0][spot[3][z]], spot[1][spot[3][z]], 's')
         ax1.plot(hzt[half_smo_interval+spot[3][z]], prof_smooth[half_smo_interval+spot[3][z]]+np.polyval(pipette, hzt[half_smo_interval+spot[3][z]]),'ro')
         ax1.plot(hzt[half_smo_interval+spot[2][z]], prof_smooth[half_smo_interval+spot[2][z]]+np.polyval(pipette, hzt[half_smo_interval+spot[2][z]]),'bo')
-        ax1.plot(hzt[spot[5][z]], spot[4][z]+np.polyval(pipette, hzt[15+spot[5][z]]),'ks')
-        grad.append((hzt[half_smo_interval+spot[3][z]]+np.polyval(pipette,hzt[half_smo_interval+spot[3][z]])-prof_smooth[half_smo_interval+spot[2][z]]-np.polyval(pipette, hzt[half_smo_interval+spot[2][z]]))/(hzt[15+spot[3][z]]-hzt[15+spot[2][z]]))
+        ax1.plot(hzt[spot[5][z]], spot[4][z]+np.polyval(pipette, hzt[half_smo_interval+spot[5][z]]),'ks')
+        grad.append((prof_smooth[half_smo_interval+spot[3][z]]+np.polyval(pipette, hzt[half_smo_interval+spot[3][z]])-prof_smooth[half_smo_interval+spot[2][z]]+np.polyval(pipette, hzt[half_smo_interval+spot[2][z]]))/(hzt[half_smo_interval+spot[3][z]]-hzt[half_smo_interval+spot[2][z]]))
         h.append(spot[4][z]+np.polyval(pipette, hzt[half_smo_interval+spot[5][z]]))
         drop_pos.append((spot[0][spot[2][z]]+spot[0][spot[3][z]])/2)
         ax1.plot((spot[0][spot[2][z]]+spot[0][spot[3][z]])/2, spot[4][z],'*')

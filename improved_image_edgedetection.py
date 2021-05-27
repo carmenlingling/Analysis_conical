@@ -27,7 +27,15 @@ for files in [f for f in os.listdir(directory) if f.endswith('.tif')]:
     fileNames.append(files)
 fileNames.sort()
 ###############################Function definition section###########################
-
+def crop(img):
+    """
+    Crop the image to select the region of interest
+    """
+    x_min = 0
+    x_max = 1280
+    y_min = 0
+    y_max = 1048
+    return img[y_min:y_max,x_min:x_max]
 
 #A function that creates a mask of the edges of the pipette
 def fill_pipette(edges, threshold):
@@ -166,7 +174,8 @@ def position_finder(x, y, threshold):
 
 #set up reference image
 ref_path = directory + '/'+fileNames[0]
-ref = np.fliplr(plt.imread(ref_path, 0))
+#ref = crop(np.fliplr(plt.imread(ref_path, 0)))
+ref = crop((plt.imread(ref_path, 0)))
 ref_img = plt.imshow(ref)
 ref = (ref-ref.min())/ref.max()
 edge_sobel = sobel(ref)
@@ -222,11 +231,18 @@ def ImportStack(directory):
     frames = pims.TiffStack(directory)
     return frames
 
+def ImportSequence(directory):
+    frames = pims.ImageSequence(os.path.join(directory,'*.tif'))
+    return frames
 
-path_two = directory + '/' + fileNames[1]
-frames = ImportStack(path_two)
-nextim = frames[0]
-nextsobel = sobel(np.fliplr(nextim))
+#path_two = directory + '/' + fileNames[1]
+#frames = ImportStack(path_two)
+
+path_two = directory+'/'
+frames = ImportSequence(path_two)
+nextim = crop(frames[1])
+#nextsobel = sobel(np.fliplr(nextim))
+nextsobel = sobel(nextim))
 two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
 plt.imshow(two)
 
@@ -253,7 +269,8 @@ profile = []
 #print((len(fileNames)-750)*3)
 for k in range(len(frames)):
 
-    nextim = np.fliplr(frames[k])
+    #nextim = crop(np.fliplr(frames[k]))
+    nextim = crop((frames[k]))
     #plt.imshow(nextim)
     #plt.show()
     nextsobel = sobel(nextim)
