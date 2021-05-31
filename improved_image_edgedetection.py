@@ -242,7 +242,7 @@ path_two = directory+'/'
 frames = ImportSequence(path_two)
 nextim = crop(frames[1])
 #nextsobel = sobel(np.fliplr(nextim))
-nextsobel = sobel(nextim))
+nextsobel = sobel(nextim)
 two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
 plt.imshow(two)
 
@@ -267,10 +267,10 @@ times = []
 position = []
 profile = []
 #print((len(fileNames)-750)*3)
-for k in range(len(frames)):
+for k in range(len(frames)-2):
 
     #nextim = crop(np.fliplr(frames[k]))
-    nextim = crop((frames[k]))
+    nextim = crop((frames[k+2]))
     #plt.imshow(nextim)
     #plt.show()
     nextsobel = sobel(nextim)

@@ -245,7 +245,7 @@ ax5 = fig5.add_subplot(111)'''
 ra = np.r_[np.linspace(0,0.9, len(position)), np.linspace(0, 0.9, len(position))]
 c = plt.get_cmap("viridis")
 colors = c(ra)
-prefactor = [1,1,1]
+prefactor = [6,6,6]
 for m in range(drop_num):
     time, positions, velocity, heights, rad, grads = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 10)
     #time2, position2, velocity2, heights2, rad2, grads2 = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 5)
@@ -268,20 +268,20 @@ for m in range(drop_num):
 
         #velocity.append(-0.71)
         #time.append(time[-1]+1)
-        ax4.plot(np.asarray(time), np.asarray(velocity)*3.69, '.', color = colors[m],  label = r'\textrm{Data}')
+        ax4.plot(np.asarray(time)/1000, np.asarray(velocity)*1.39, '.', color = colors[m],  label = r'\textrm{Data}')
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m], label = r'\textrm{Data}')
-        ax4.plot(np.asarray(time),prefactor[m]*(0.02033)*(np.asarray(heights))*grads/rad, color = 'k', label = r'\textrm{Model}')
+        ax4.plot(np.asarray(time)/1000,prefactor[m]*(0.02033)*(np.asarray(heights)*grads)/rad, color = 'k', label = r'\textrm{Model}')
         #ax5.plot(time2, velocity2)
 
     else:
-        ax4.plot(np.asarray(time), np.asarray(velocity)*3.69, '.', color = colors[m])
+        ax4.plot(np.asarray(time)/1000, np.asarray(velocity)*1.39, '.', color = colors[m])
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m])
         #ax5.plot(time2, velocity2)
-        ax4.plot(np.asarray(time),prefactor[m]*(0.02033)*(np.asarray(heights))*grads/rad, color = 'k')
+        ax4.plot(np.asarray(time)/1000,prefactor[m]*(0.02033)*(np.asarray(heights)*grads)/rad, color = 'k')
     #ax5.plot(np.asarray(time2)/0.5,prefactor[m]*(0.02033/0.005)*(np.asarray(heights2))*grads2/rad2, color = colors[m])
 
 #ax5.set_xlabel(r'$\textrm{Time} /\textrm{s}$', fontsize = 24)
