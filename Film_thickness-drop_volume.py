@@ -1,11 +1,11 @@
 import tkinter as tk
-from tkinter import filedialog 
+from tkinter import filedialog
 import numpy as np
-import os 
+import os
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-import cv2
+
 from scipy import ndimage as ndi
 from skimage import feature, measure
 from skimage.filters import roberts, sobel, scharr, prewitt
@@ -25,7 +25,7 @@ directory = os.path.split(file_path)[0]
 fileNames = []
 for files in [f for f in os.listdir(directory) if f.endswith('.tif')]:
     fileNames.append(files)
-
+fileNames.sort()
 
 #A function that creates a mask of the edges of the pipette
 def fill_pipette(edges, threshold):
@@ -53,7 +53,7 @@ def refill_array(top, bottom, x, y, nextim):
 
     return new_array[0:x, min(bottom):max(top)]
 
-#for tracking the where the droplet is 
+#for tracking the where the droplet is
 def collapse(masked):
     tops = []
     bottoms = []
@@ -62,7 +62,7 @@ def collapse(masked):
     for column in range(masked.shape[1]):
         indices = np.where(masked[:,column] == 1)
         index = indices[0]
-    
+
         if len(index) > 0:
             bottoms.append(min(index))
             tops.append(max(index))
@@ -77,8 +77,8 @@ def collapse(masked):
              validy.append((tops[m]+bottoms[m])/2)
              top.append(tops[m])
              bottom.append(bottoms[m])
-    
-    return validx, validy, top, bottom  
+
+    return validx, validy, top, bottom
 
 #set up reference image
 ref_path = directory + '/'+fileNames[0]
@@ -87,7 +87,7 @@ ref_img = plt.imshow(ref)
 ref = (ref-ref.min())/ref.max()
 edge_sobel = sobel(ref)
 
-level = 0.21
+level = 0.25
 binary = fill_pipette(edge_sobel/edge_sobel.max(), level)
 
 plt.imshow(binary)
@@ -101,23 +101,36 @@ x = np.asarray(x)
 plt.plot(x,pipette, '.r')
 
 #fit a polynomial to the pipette
+def polynomial(x, a, b, c, d, e):
+    return a*x**4+b*x**3+c*x**2+d*x+e
+p, cov = sc.optimize.curve_fit(polynomial, x,pipette)
+totale = np.sqrt(np.sum(np.diag(cov)))
+print('cov=',totale)
 fit = np.polyfit(x, pipette, 6)
 
 plt.plot(x, np.polyval(fit, x))
+plt.plot(x, polynomial(x, p[0], p[1],p[2],p[3],p[4]))
+
 plt.plot(x, np.polyval(np.polyder(fit), x))
 
-
-def line(a,x,b):
+anglefit = np.polyfit(x, pipette, 1)
+plt.plot(x, np.polyval(anglefit, x), 'g')
+def line(x, a,b):
     return a*x+b
+a, acov = sc.optimize.curve_fit(line, x, pipette)
+print(a, acov)
+print('angle= ', np.rad2deg(np.arctan2(a[0]/2,1)), '+/-', np.rad2deg(np.arctan2(np.sqrt(acov[0][0])/2,1)))
+
+
 
 p,k= sc.optimize.curve_fit(line, x, y)
-plt.plot(np.asarray(x), p[0]*np.asarray(x)+p[1], '-b')
+#plt.plot(np.asarray(x), p[0]*np.asarray(x)+p[1], '-b')
 plt.show()
 
 
+pixtomic = 3.34
 
-
-
+print('drop center radii', np.polyval(fit, 781)*pixtomic/2, '+/-', totale, 'and', np.polyval(fit, 1086)*pixtomic/2,'+/-', totale )
 
 
 def position_finder(x, y, threshold):
@@ -132,15 +145,15 @@ def position_finder(x, y, threshold):
     else:
         pass
     #print(indices)
-    
+
     droplet_position_break = [0]
-    
+
     for index in range(len(indices)-1):
-        
+
         if indices[index+1] - indices[index] > 1:
             droplet_position_break.append(index)
     #print(droplet_position_break)
-    
+
     position = []
     if droplet_position_break == [0] and len(indices) >1:
         p = np.polyfit(x[indices[0]:indices[-1]], y[indices[0]:indices[-1]], 2)
@@ -188,64 +201,37 @@ for k in range(1):
     next_path = directory + '/'+fileNames[k+1]
     nextim = plt.imread(next_path, 0)
     nextsobel = sobel(nextim)
-    two  = fill_pipette(nextsobel/nextsobel.max(), 0.2)
+    two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
     plt.imshow(two)
-    
-    
+
+
     x2,y2, top2, bottom2 = collapse(two)
     line = (np.asarray(top2)+np.asarray(bottom2))/2
-    for item in range(len(line)):
-        slices[(k*3):(k*3)+3,item]=nextim[int(line[item])-1:int(line[item])+2, item]
-    #(np.asarray(top2)-np.asarray(bottom2) - np.polyval(fit, x2)))
-    
+
     plt.plot(np.asarray(x2), np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2)))
-    film_thickness = np.average(np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit,np.asarray(x2)))
+    film_thickness = np.average(np.asarray(top2)[0:600]-np.asarray(bottom2)[0:600]-np.polyval(fit,np.asarray(x2)[0:600]))
     z = np.asarray(x2)
     r = np.polyval(fit, z)
     grad = np.polyval(np.polyder(fit), z)
-    print(film_thickness)                   
+    print('film thickness= ',  film_thickness*pixtomic/2, '+/-', pixtomic*np.sqrt(totale**2+1)/2 )
     plt.show()
-    #position = position_finder(x2, np.asarray(top2)-np.asarray(bottom2) - np.polyval(fit, x2), 20)
-    #print(position, k)
-    #if len(position)>0:
-    #    ax2.plot(np.full(len(position), k), position, '.')
-    #else:
-    #    pass
-    
-    #positions.append(position)
-    #if len(position) > maxlen:
-    #    maxlen = len(position)
-#ax2.set_ylim[0,1280]
-'''
-pos_array = y=np.array([xi+[-555]*(maxlen-len(xi)) for xi in positions])
-np.savetxt(directory + '/' + 'output.csv', pos_array)
 
-plt.savefig(directory+ '/'+'positions.eps')
+
+#drop volume
+next_path = directory + '/'+fileNames[2]
+nextim = plt.imread(next_path, 0)
+nextsobel = sobel(nextim)
+two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
+plt.imshow(two)
+x2,y2, top2, bottom2 = collapse(two)
+
+drop_start =911
+drop_end =1280
+drop_volumeb = ((np.asarray(top2)[612:drop_start]-np.asarray(bottom2)[612:drop_start])/2)**2-(np.polyval(fit, np.asarray(x2)[612:drop_start])/2)**2
+
+drop_volumes = ((np.asarray(top2)[drop_start:drop_end]-np.asarray(bottom2)[drop_start:drop_end])/2)**2-(np.polyval(fit, np.asarray(x2)[drop_start:drop_end])/2)**2
+plt.plot(np.asarray(x2)[drop_start:drop_end],(np.asarray(top2)[drop_start:drop_end]-np.asarray(bottom2)[drop_start:drop_end])/2)
+plt.plot(np.asarray(x2)[drop_start:drop_end], (np.polyval(fit, np.asarray(x2)[drop_start:drop_end])/2))
 plt.show()
-'''
-''']with open(directory+'/'+"output.csv", "w", newline = '') as f:
-    writer = csv.writer(f)
-    writer.writerows(positions)
-'''
-'''
-
-#plotting visual of images
-fig_im = plt.figure(figsize = (3,9))
-grid = plt.GridSpec(15, 1, wspace=1, hspace=0.4)
-
-ax1 =fig_im.add_subplot(grid[0:2,0])
-im1 = plt.imread(directory + '/'+fileNames[1], 0)
-ax1.imshow(im1[int(im1.shape[1]/3):int(2*im1.shape[1]/3)])
-a2 = fig_im.add_subplot(grid[2:13,0])
-a2.imshow(slices)
-a3 = fig_im.add_subplot(grid[13:15,0])
-imlast = plt.imread(directory + '/'+fileNames[-1], 0)
-a3.imshow(imlast[int(imlast.shape[1]/3):int(2*imlast.shape[1]/3)])
-
-
-
-plt.savefig(directory+'/'+'droplets.eps')
-#
-plt.show()
-        '''
-
+print('drop_volume_small',sum(drop_volumes)*pixtomic**3/(1000**3), '+/-', (pixtomic**3)*(drop_end-drop_start)*(np.sqrt(2*totale**2+2*2**2))/2/(1000**3))
+print('drop_volume_big',sum(drop_volumeb)*pixtomic**3/(1000**3), '+/-', (pixtomic**3)*(drop_start)*(np.sqrt(2*totale**2+2*2**2))/2/(1000**3))

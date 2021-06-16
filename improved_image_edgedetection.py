@@ -5,7 +5,7 @@ import os
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-
+plt.rcParams.update({"text.usetex": True,"font.family": "sans-serif","font.sans-serif": ["Helvetica"]})
 from scipy import ndimage as ndi
 from skimage import feature, measure
 from skimage.filters import roberts, sobel, scharr, prewitt
@@ -26,6 +26,8 @@ fileNames = []
 for files in [f for f in os.listdir(directory) if f.endswith('.tif')]:
     fileNames.append(files)
 fileNames.sort()
+
+flip = False
 ###############################Function definition section###########################
 def crop(img):
     """
@@ -171,16 +173,17 @@ def position_finder(x, y, threshold):
 
 
 
-
 #set up reference image
 ref_path = directory + '/'+fileNames[0]
-#ref = crop(np.fliplr(plt.imread(ref_path, 0)))
-ref = crop((plt.imread(ref_path, 0)))
+if flip ==True:
+    ref = np.fliplr(crop(plt.imread(ref_path, 0)))
+else:
+    ref = crop((plt.imread(ref_path, 0)))
 ref_img = plt.imshow(ref)
 ref = (ref-ref.min())/ref.max()
 edge_sobel = sobel(ref)
 
-level = 0.22
+level = 0.25
 binary = fill_pipette(edge_sobel/edge_sobel.max(), level)
 
 plt.imshow(binary, alpha = 0.6)
@@ -194,14 +197,14 @@ pipette = np.asarray(top)-np.asarray(bottom)
 x = np.asarray(x)
 plt.plot(x,pipette, '.r')
 
-x1 = x[0:100]
-x2 = x[300:-1]
-pip1 = pipette[0:100]
-pip2 = pipette[300:-1]
+x1 = x[387:561]
+x2 = x[1159:]
+pip1 = pipette[387:561]
+pip2 = pipette[1159:]
 print(np.concatenate((x1, x2)))
 #fit a polynomial to the pipette
-#fit = np.polyfit(np.concatenate((x1, x2)), np.concatenate((pip1, pip2)), 5)
-fit = np.polyfit(x, pipette,6)
+fit = np.polyfit(np.concatenate((x1, x2)), np.concatenate((pip1, pip2)), 4)
+#fit = np.polyfit(x, pipette,6)
 plt.plot(x, np.polyval(fit, x))
 
 
@@ -241,8 +244,13 @@ def ImportSequence(directory):
 path_two = directory+'/'
 frames = ImportSequence(path_two)
 nextim = crop(frames[1])
-#nextsobel = sobel(np.fliplr(nextim))
-nextsobel = sobel(nextim)
+if flip == True:
+
+    nextsobel = sobel(np.fliplr(nextim))
+    plt.imshow(nextsobel)
+    plt.show()
+else:
+    nextsobel = sobel(nextim)
 two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
 plt.imshow(two)
 
@@ -267,10 +275,11 @@ times = []
 position = []
 profile = []
 #print((len(fileNames)-750)*3)
-for k in range(len(frames)-2):
-
-    #nextim = crop(np.fliplr(frames[k]))
-    nextim = crop((frames[k+2]))
+for k in range(len(frames)-1):
+    if flip ==True:
+        nextim = np.fliplr(crop(frames[k]))
+    else:
+        nextim = crop((frames[k+1]))
     #plt.imshow(nextim)
     #plt.show()
     nextsobel = sobel(nextim)
@@ -280,8 +289,8 @@ for k in range(len(frames)-2):
 
     x2,y2, top2, bottom2 = collapse(two)
     line = (np.asarray(top2)+np.asarray(bottom2))/2
-    '''for item in range(len(line)):
-        slices[(k*3):(k*3)+3,item]=nextim[int(line[item])-1:int(line[item])+2, item]'''
+    for item in range(len(line)):
+        slices[(k*3):(k*3)+3,item]=nextim[int(line[item])-1:int(line[item])+2, item]
     #plt.plot(np.asarray(x2), np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2)))
 
     profile.append(np.ndarray.tolist(np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2))))
@@ -299,34 +308,77 @@ np.savetxt(directory + '/' + 'profile.csv', profile_array)
 np.savetxt(directory + '/' + 'horizontal.csv', pos_array)
 np.savetxt(directory + '/' + 'frames.csv', times)
 np.savetxt(directory + '/' + 'pipette2.csv', fit)
-'''
-plt.savefig(directory+ '/'+'positions.eps')
-plt.show()
-'''
+
+#plt.savefig(directory+ '/'+'positions.eps')
+#plt.show()
+
 ra = np.r_[np.linspace(0,0.9, int(len(frames)/50)), np.linspace(0, 0.9, int(len(frames)/50))]
 c = plt.get_cmap("plasma")
 colors = c(ra)
 plt.plot(pos_array,profile_array)
+plt.show()
 
+np.savetxt(directory+'/'+'slices.csv', slices)
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 ################################################
-'''#plotting visual of images and saving data#########
+#plotting visual of images and saving data#########
+fig_im, ax2 = plt.subplots(figsize=(4, 7))
+fig_im.subplots_adjust(top=0.96, bottom=0.2, left=0.21, right=0.96)
+slices = np.genfromtxt(directory+'/slices.csv')
+timedata = np.genfromtxt(directory+ '/times.csv')
+print(len(timedata), len(slices[0:1113]),timedata[-1]-timedata[0], len(slices[0:1113])*1000/(timedata[-1,0]-timedata[0,0]), (timedata[-1,0]-timedata[0,0])/(1000*len(slices)))
+ax2.imshow(slices[0:1113])
+divider = make_axes_locatable(ax2)
+# below height and pad are in inches
+ax1 = divider.append_axes("top", 1.1, pad=0.1, sharex=ax2)
+ax3 = divider.append_axes("bottom", 1.1, pad=0.1, sharex=ax2)
 
-fig_im = plt.figure(figsize = (3,9))
-grid = plt.GridSpec(15, 1, wspace=1, hspace=0.4)
+# make some labels invisible
+ax1.xaxis.set_tick_params(labelbottom=False)
+ax1.yaxis.set_tick_params(labelleft=False)
+ax2.xaxis.set_tick_params(labelbottom=False)
+ax3.yaxis.set_tick_params(labelleft=False)
+ax2.set_yticks([0,345, 690, 1035])
+ax2.set_yticklabels([r'$0$', r'$20$', r'$40$', r'$60$'], fontsize = 20)
+ax2.set_ylabel(r'$t$ $\left[ \textrm{s}\right]$', fontsize = 24)
+ax3.set_xticks([0, 500/1.39, 1000/1.39, 1500/1.39])
 
-ax1 =fig_im.add_subplot(grid[0:2,0])
-im1 = np.fliplr(plt.imread(directory + '/'+fileNames[1], 0))
-ax1.imshow(im1[int(im1.shape[1]/3):int(2*im1.shape[1]/3)])
-a2 = fig_im.add_subplot(grid[2:13,0])
-a2.imshow(slices)
+ax3.set_xticklabels([r'$0$', r'$500$', r'$1000$',  r'$1500$'], fontsize = 20)
+ax3.set_xlabel(r'$x$ $\left[ \mu \textrm{m}\right]$', fontsize = 24)
+#fig_im = plt.figure(figsize = (3,9))
+#grid = plt.GridSpec(15, 1, wspace=1, hspace=0.2)
 
-a3 = fig_im.add_subplot(grid[13:15,0])
-imlast = np.fliplr(plt.imread(directory + '/'+fileNames[-1], 0))
-a3.imshow(imlast[int(imlast.shape[1]/3):int(2*imlast.shape[1]/3)])
+#ax1 =fig_im.add_subplot(grid[0:2])
+#im1 = plt.imread(directory + '/'+fileNames[2], 0)
+im1 = frames[1]
+nextim = crop((im1))
+#plt.imshow(nextim)
+#plt.show()
+nextsobel = sobel(nextim)
+two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
+x2,y2, top2, bottom2 = collapse(two)
+line = (np.asarray(top2)+np.asarray(bottom2))/2
+#ax1.xticks([0, 500, 1000],['','',''])
+ax1.imshow(im1[int(line[0])-int(im1.shape[1]/6):int(line[0])+int(im1.shape[1]/6)])
+#a2 = fig_im.add_subplot(grid[2:13])
+
+#a2.xticks([0, 500, 1000], ['','',''])
+#a3 = fig_im.add_subplot(grid[13:15,0])
+#imlast = plt.imread(directory + '/'+fileNames[-1], 0)
+imlast = frames[-1]
+print(len(fileNames))
+nextim = crop((imlast))
+#plt.imshow(nextim)
+#plt.show()
+nextsobel = sobel(nextim)
+two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
+x2,y2, top2, bottom2 = collapse(two)
+line = (np.asarray(top2)+np.asarray(bottom2))/2
+#a3.set_xticks([0, 500, 1000],['0', str(500*1.39), str(1000*1.39)])
+ax3.imshow(imlast[int(line[0])-int(im1.shape[1]/6):int(line[0])+int(im1.shape[1]/6)])
+
 
 
 
 plt.savefig(directory+'/'+'droplets.eps')
-#
 plt.show()
-        '''

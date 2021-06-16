@@ -191,14 +191,33 @@ data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh pro
 data_height = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1000_500ms_23012018_2_pipette/heights2.csv')
 data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1000_500ms_23012018_2_pipette/pipette2.csv')'''
 #data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/1500_500ms_23012019_1/output.csv')
-directory = '/Users/carmenlee/Desktop/13082020_pip1_1/'
+directory = '/Users/carmenlee/Desktop/12032019_zoom2/'
 data = np.genfromtxt(directory+'drop_positions.csv')
 data_height = np.genfromtxt(directory+'drop_height.csv')
 data_pipette = np.genfromtxt(directory+'pipette2.csv')
 gradients = np.genfromtxt(directory+'gradients.csv')
 rs = np.genfromtxt(directory+'drop_piprad.csv')
 timedata = np.genfromtxt(directory+ 'times.csv')
+midpoints = np.genfromtxt(directory+ 'midpoints.csv')
 print(timedata)
+cut_off_time = 83
+start_time = 54
+end_time = 110
+stopInd = np.where(timedata[:,0]>cut_off_time)[0][0]
+startInd = np.where(timedata[:,0]>start_time)[0][0]
+endInd = np.where(timedata[:,0]>end_time)[0][0]
+print(stopInd, startInd, endInd)
+figmidpoint, axmid = plt.subplots(figsize = (4,3))
+figmidpoint.subplots_adjust(top=0.99, bottom=0.28, left=0.3, right=0.99)
+axmid.plot((timedata[startInd:stopInd,0]-timedata[0,0]), np.asarray(midpoints[startInd:stopInd]), '.')
+axmid.set_xlabel(r'$t \left[\textrm{s}\right]$',fontsize = 24)
+axmid.set_ylabel(r'$h \left[\mu\textrm{m}\right]$',fontsize = 24)
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+plt.show()
+
+#exit()
+
 #data2 = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/01022019/zoom/drops.csv')
 '''
 data = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/01022019/zoom_single/drop_positions.csv')
@@ -216,17 +235,17 @@ print(data.shape)
 
 #data_pipette = np.genfromtxt('/Users/sflee/Desktop/Research/Plateau-Rayleigh project/Data OM/PDMS5000/22012019/2000_500ms_22012018_3_pipette/pipette.csv')
 
-plt.plot(timedata, data, '.')
+plt.plot(timedata[stopInd+1:endInd,0], data_height[stopInd+1:endInd,0], '.')
 #plt.plot(range(len(data2)), data2)
 plt.plot(range(len(data)), np.polyval(data_pipette, data))
 plt.show()
 
 
-
+'''
 drop_num = int(input('How many droplets do you see?'))
 
 position, height, grad, radii, position_2 = SelectData(data,timedata, drop_num, data_height,gradients, rs, data)
-print(position_2[0])
+print(position_2[0])'''
 fig = plt.figure(1)
 ax = fig.add_subplot(111)
 fig2 = plt.figure(2)
@@ -235,65 +254,61 @@ ax2 = fig2.add_subplot(111)
 fig3 = plt.figure(3)
 ax3 = fig3.add_subplot(111)
 
-fig4 = plt.figure(4)
-ax4 = fig4.add_subplot(111)
 
+fig5 = plt.figure(5)
+ax5 = fig5.add_subplot(111)
 
 '''fig5 = plt.figure(5)
 ax5 = fig5.add_subplot(111)'''
+fig4 = plt.figure(4, figsize = (4, 3))
+fig4.subplots_adjust(top=0.96, bottom=0.28, left=0.3, right=0.99)
+ax4 = fig4.add_subplot(111)
 
-ra = np.r_[np.linspace(0,0.9, len(position)), np.linspace(0, 0.9, len(position))]
+drop_num = [[0, startInd, stopInd], [0, stopInd, endInd], [1, startInd, stopInd]]
+ra = np.r_[np.linspace(0,0.9, len(drop_num)), np.linspace(0, 0.9, len(drop_num))]
 c = plt.get_cmap("viridis")
 colors = c(ra)
-prefactor = [6,6,6]
-for m in range(drop_num):
-    time, positions, velocity, heights, rad, grads = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 10)
-    #time2, position2, velocity2, heights2, rad2, grads2 = velocitycalc(position[m][0], position[m][1], height[m], radii[m], grad[m], 5)
-    #time, positions, velocity, heights = velocitycalcsmooth(position[m][0], position[m][1], height[m])
 
-    #ax.plot(time, position[m][1], color = colors[m])
-    #ax.plot(time, position_2[m])
-    ax.plot(time, positions, '.', color = colors[m])
+prefactor = [15,15,15]
+for m in range(len(drop_num)):
+    times = timedata[drop_num[m][1]:drop_num[m][2],drop_num[m][0]]
+    print(times)
+    position = data[drop_num[m][1]:drop_num[m][2],drop_num[m][0]]
+    height = data_height[drop_num[m][1]:drop_num[m][2],drop_num[m][0]]
+    radii = rs[drop_num[m][1]:drop_num[m][2],drop_num[m][0]]
+    grad = gradients[drop_num[m][1]:drop_num[m][2],drop_num[m][0]]
+    time, positions, velocity, heights, rad, grads = velocitycalc(times, position, height+radii, radii, grad, 10)
+    print(time)
+    ax.plot(np.asarray(time)-start_time, positions, '.', color = colors[m])
     print(data_pipette)
     r = np.polyval(data_pipette, positions)
     grade = np.polyval(np.polyder(data_pipette), positions)
-    #ax2.plot(positions, r)
+    ax5.plot(np.asarray(time)-start_time, rad, '.')
     #ax2.plot(positions, rad)
     ax2.plot(positions, grade)
     ax2.plot(positions, grads)
     #ax3.plot(positions, velocity,color = colors[m], label = str(m))
     #ax3.plot(positions, heights, color = colors[m], label = str(m))
-    ax3.plot(position[m][1], height[m] , '.', color = colors[m], label = str(m))
-    if m ==2:
+    ax3.plot(position, height , '.', color = colors[m], label = str(m))
 
-        #velocity.append(-0.71)
-        #time.append(time[-1]+1)
-        ax4.plot(np.asarray(time)/1000, np.asarray(velocity)*1.39, '.', color = colors[m],  label = r'\textrm{Data}')
-    #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
-    #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
-        #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m], label = r'\textrm{Data}')
-        ax4.plot(np.asarray(time)/1000,prefactor[m]*(0.02033)*(np.asarray(heights)*grads)/rad, color = 'k', label = r'\textrm{Model}')
-        #ax5.plot(time2, velocity2)
-
-    else:
-        ax4.plot(np.asarray(time)/1000, np.asarray(velocity)*1.39, '.', color = colors[m])
+    ax4.plot((np.asarray(time)-start_time), np.asarray(velocity), '.', color = colors[m])
     #ax4.plot(np.asarray(positions)*3.69,7.5*(0.02033/0.005)*(np.asarray(heights)*3.69)*grads/rad , color = colors[m])
     #ax4.plot(positions,1.75*(0.02033/0.005)*(np.asarray(heights))*grade/r)
         #ax5.plot(np.asarray(time)/0.5, np.asarray(velocity)*3.69/0.5, '.', color = colors[m])
         #ax5.plot(time2, velocity2)
-        ax4.plot(np.asarray(time)/1000,prefactor[m]*(0.02033)*(np.asarray(heights)*grads)/rad, color = 'k')
+    ax4.plot((np.asarray(time)-start_time),prefactor[m]*(20.33)*(np.asarray(heights)*grads)/rad, color = 'k')
     #ax5.plot(np.asarray(time2)/0.5,prefactor[m]*(0.02033/0.005)*(np.asarray(heights2))*grads2/rad2, color = colors[m])
 
 #ax5.set_xlabel(r'$\textrm{Time} /\textrm{s}$', fontsize = 24)
 ax.set_ylabel('Position from pipette tip')
 ax3.set_ylabel(r'$h$', fontsize = 24,)
-ax4.set_xlabel(r'$\textrm{Time} /\textrm{s}$ ', fontsize = 24)
-ax4.set_ylabel(r'$\textrm{Velocity}$ / $\mu \textrm{m s}^{-1}$', fontsize = 24)
+ax4.set_xlabel(r'$t \left[ \textrm{s}\right]$ ', fontsize = 24)
+ax4.set_ylabel(r'$v$ $\left[ \mu \textrm{m s}^{-1} \right]$', fontsize = 24)
 #ax4.set_ylim(3, 14)
 ax4.legend(loc = 2, fontsize = 24, frameon = False)
 #ax5.legend(loc = 2, fontsize = 24, frameon = False)
 #ax5.set_ylim(3, 14)
-plt.xticks(fontsize=24)
-plt.yticks(fontsize=24)
-
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+plt.savefig(directory+'veltime.eps')
 plt.show()
