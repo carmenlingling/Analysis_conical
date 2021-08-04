@@ -27,7 +27,8 @@ for files in [f for f in os.listdir(directory) if f.endswith('.tif')]:
     fileNames.append(files)
 fileNames.sort()
 
-flip = False
+flip = True
+
 ###############################Function definition section###########################
 def crop(img):
     """
@@ -53,7 +54,7 @@ def fill_pipette(edges, threshold):
 #A function that checks where the pipette + droplets are, makes an array of the appropriate size
 def refill_array(top, bottom, x, y, nextim):
     new_array = np.empty((nextim.shape[0],len(x)+1))
-    print(new_array.shape, nextim.shape)
+    #print(new_array.shape, nextim.shape)
     for value in x[0:-1]:
         for ys in range(nextim.shape[1]):
             if ys < y[value] and ys < bottom[value]:
@@ -201,10 +202,10 @@ x1 = x[387:561]
 x2 = x[1159:]
 pip1 = pipette[387:561]
 pip2 = pipette[1159:]
-print(np.concatenate((x1, x2)))
+#print(np.concatenate((x1, x2)))
 #fit a polynomial to the pipette
 fit = np.polyfit(np.concatenate((x1, x2)), np.concatenate((pip1, pip2)), 4)
-#fit = np.polyfit(x, pipette,6)
+fit = np.polyfit(x, pipette,6)
 plt.plot(x, np.polyval(fit, x))
 
 
@@ -226,7 +227,7 @@ grad = np.polyval(np.polyder(fit), z) ###gradient of radius
 ################### Film thickness from the second image #############
 fig2 = plt.figure(2)
 ax2 = fig2.add_subplot(111)
-ax2.set_xlabel('Frame #')
+ax2.set_xlabel('Frame')
 ax2.set_ylabel('z (pixels)')
 
 import pims
@@ -243,6 +244,7 @@ def ImportSequence(directory):
 
 path_two = directory+'/'
 frames = ImportSequence(path_two)
+
 nextim = crop(frames[1])
 if flip == True:
 
@@ -259,13 +261,14 @@ x2,y2, top2, bottom2 = collapse(two)
 line = (np.asarray(top2)+np.asarray(bottom2))/2
 
 plt.plot(np.asarray(x2), np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2)))
-film_thickness = np.average(np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit,np.asarray(x2)))
-
-print(film_thickness)
+film_thickness = np.average(np.asarray(top2[0:1000])-np.asarray(bottom2[0:1000])-np.polyval(fit,np.asarray(x2[0:1000])))
+from scipy.stats import sem
+se = sem(np.asarray(top2[0:1000])-np.asarray(bottom2[0:1000]))
+print(film_thickness*5.57/2, '+/-', se*5.57/2, r'$mu$m')
 plt.show()
 
 ########################################################################
-
+'''
 ############################Finding droplet positions###################
 
 
@@ -296,9 +299,9 @@ for k in range(len(frames)-1):
     profile.append(np.ndarray.tolist(np.asarray(top2)-np.asarray(bottom2)-np.polyval(fit, np.asarray(x2))))
     position.append(x2)
     times.append(k)
-print(position)
+#print(position)
 length = len(sorted(profile,key=len, reverse=True)[0])
-print(length)
+#print(length)
 pos_array = y=np.array([xi+[-555]*(length-len(xi)) for xi in position])
 profile_array = np.array([hi+[-555]*(length-len(hi)) for hi in profile])
 #frames_array = np.array([hi+[-555]*(length-len(hi)) for hi in frames])
@@ -319,42 +322,50 @@ plt.plot(pos_array,profile_array)
 plt.show()
 
 np.savetxt(directory+'/'+'slices.csv', slices)
+
+'''
+
+
+
+
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 ################################################
 #plotting visual of images and saving data#########
-fig_im, ax2 = plt.subplots(figsize=(4, 7))
-fig_im.subplots_adjust(top=0.96, bottom=0.2, left=0.21, right=0.96)
-slices = np.genfromtxt(directory+'/slices.csv')
-timedata = np.genfromtxt(directory+ '/times.csv')
-print(len(timedata), len(slices[0:1113]),timedata[-1]-timedata[0], len(slices[0:1113])*1000/(timedata[-1,0]-timedata[0,0]), (timedata[-1,0]-timedata[0,0])/(1000*len(slices)))
-ax2.imshow(slices[0:1113])
+fig_im, ax2 = plt.subplots(figsize=(5, 8))
+fig_im.subplots_adjust(top=0.98, bottom=0.133, left=0.036, right=0.96, hspace=0.05)
+slices = np.genfromtxt(directory+'/slices.csv')[0:2477]
+#timedata = np.genfromtxt(directory+ '/times.csv')
+#print(len(timedata), len(slices[0:1113]),timedata[-1]-timedata[0], len(slices[0:1113])*1000/(timedata[-1,0]-timedata[0,0]), (timedata[-1,0]-timedata[0,0])/(1000*len(slices)))
+ax2.imshow(slices)
 divider = make_axes_locatable(ax2)
 # below height and pad are in inches
-ax1 = divider.append_axes("top", 1.1, pad=0.1, sharex=ax2)
-ax3 = divider.append_axes("bottom", 1.1, pad=0.1, sharex=ax2)
-
+ax1 = divider.append_axes("top", 1.05, pad=0.05, sharex=ax2)
+ax3 = divider.append_axes("bottom", 1.05, pad=0.05, sharex=ax2)
+print(len(slices))
 # make some labels invisible
 ax1.xaxis.set_tick_params(labelbottom=False)
 ax1.yaxis.set_tick_params(labelleft=False)
 ax2.xaxis.set_tick_params(labelbottom=False)
 ax3.yaxis.set_tick_params(labelleft=False)
-ax2.set_yticks([0,345, 690, 1035])
-ax2.set_yticklabels([r'$0$', r'$20$', r'$40$', r'$60$'], fontsize = 20)
-ax2.set_ylabel(r'$t$ $\left[ \textrm{s}\right]$', fontsize = 24)
-ax3.set_xticks([0, 500/1.39, 1000/1.39, 1500/1.39])
-
-ax3.set_xticklabels([r'$0$', r'$500$', r'$1000$',  r'$1500$'], fontsize = 20)
-ax3.set_xlabel(r'$x$ $\left[ \mu \textrm{m}\right]$', fontsize = 24)
+ax2.set_yticks([0,50/.2*3, 100/0.2*3, 150/.2*3])
+ax2.set_yticklabels([r'$0$', r'$50$', r'$100$', r'$150$'], fontsize = 30)
+ax2.set_ylabel(r'$t$ $\left[ \textrm{s}\right]$', fontsize = 40)
+#ax3.set_xticks([0, 500/1.39, 1000/1.39, 1500/1.39])
+ax3.set_xticks([0, 4000/5.57])
+ax3.set_xticklabels([r'$0$', r'$4000$'], fontsize = 30)
+#ax3.set_xticklabels([r'$0$', r'$500$', r'$1000$',  r'$1500$'], fontsize = 20)
+ax3.set_xlabel(r'$z$ $\left[ \mu \textrm{m}\right]$', fontsize = 40)
 #fig_im = plt.figure(figsize = (3,9))
 #grid = plt.GridSpec(15, 1, wspace=1, hspace=0.2)
 
+
 #ax1 =fig_im.add_subplot(grid[0:2])
 #im1 = plt.imread(directory + '/'+fileNames[2], 0)
-im1 = frames[1]
+im1 = np.fliplr(frames[1])
 nextim = crop((im1))
 #plt.imshow(nextim)
 #plt.show()
-nextsobel = sobel(nextim)
+nextsobel = sobel((nextim))
 two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
 x2,y2, top2, bottom2 = collapse(two)
 line = (np.asarray(top2)+np.asarray(bottom2))/2
@@ -365,12 +376,12 @@ ax1.imshow(im1[int(line[0])-int(im1.shape[1]/6):int(line[0])+int(im1.shape[1]/6)
 #a2.xticks([0, 500, 1000], ['','',''])
 #a3 = fig_im.add_subplot(grid[13:15,0])
 #imlast = plt.imread(directory + '/'+fileNames[-1], 0)
-imlast = frames[-1]
+imlast = np.fliplr(frames[826])
 print(len(fileNames))
 nextim = crop((imlast))
 #plt.imshow(nextim)
 #plt.show()
-nextsobel = sobel(nextim)
+nextsobel = sobel((nextim))
 two  = fill_pipette(nextsobel/nextsobel.max(), 0.25)
 x2,y2, top2, bottom2 = collapse(two)
 line = (np.asarray(top2)+np.asarray(bottom2))/2

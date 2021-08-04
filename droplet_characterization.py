@@ -7,14 +7,15 @@ import matplotlib.pyplot as plt
 
 #Switch these out for the appropriate files
 
-directory = '/Users/carmenlee/Desktop/13082020_pip2_2/'
+directory = '/Users/carmenlee/Desktop/13082020_pip1_1/'
 profile = np.genfromtxt(directory +'profile.csv')
 horizontal = np.genfromtxt(directory +'horizontal.csv')
 frame = np.genfromtxt(directory +'frames.csv')
 pipette  =np.genfromtxt(directory +'pipette2.csv')
 time_raw =directory+'metadata.txt'
+pixtomic = 1.39
 import metadata_reader
-timedata = metadata_reader.read_txtfile(time_raw)[249:]
+timedata = metadata_reader.read_txtfile(time_raw)[548:]
 #    #print(timedata[k] - timedata[k+1])
 ############################################
 # Homemade functions
@@ -91,7 +92,7 @@ def extrema_checker(horz, vert, averaging):
         xposdd.append(xpos[m+int(averaging/2)])
     smooth_dblderiv=np.asarray(smooth_dblderiv)
     #minima = np.where(abs(smooth_deriv)>0.18)[0]
-    minima = np.where(np.asarray(vert)<0)[0]
+    minima = np.where(np.asarray(smooth_dblderiv>0.003))[0]
 
     print(minima)
     beginning, end = check_for_breaks(minima)
@@ -268,20 +269,21 @@ rs = []
 vol = []
 drops_positions =[]
 times = []
+widths = []
 midpoint_heights = []
-
+midpoint_heightsloc = []
 fig = plt.figure(1)
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 
 
 start = 1
-cut_off_time = 173923
+cut_off_time = 29050
 avg_interval = 30
 half_interval = 15
 smooth_interval= 30
 half_smo_interval = 30
-for k in range(200):
+for k in range(230):
 #for k in range(int(len(profile))-start):
     print(k)
     prof_smooth = []
@@ -312,11 +314,13 @@ for k in range(200):
     h = []
     r = []
     grad = []
+    wid = []
     pos = []
     drop_pos = []
     volumes = []
     timer = []
-    midpoint_height = []
+    #midpoint_height = []
+    #midpoint_heightloc = []
     spot=extrema_checker(hzt, prof_smooth,smooth_interval)
     ax2.plot(spot[0], spot[1])
     x = [len(spot[3]),len(spot[2]), len(spot[4]), len(spot[5])]
@@ -334,6 +338,7 @@ for k in range(200):
         grad.append((spot[3][z][1]+np.polyval(pipette, spot[3][z][0])-spot[2][z][1]-np.polyval(pipette, spot[2][z][0]))/(spot[3][z][0]-spot[2][z][0]))
         ax1.plot([spot[2][z][0],spot[3][z][0]], [spot[2][z][1]+np.polyval(pipette, spot[2][z][0]),spot[3][z][1]+np.polyval(pipette, spot[3][z][0])])
         h.append(spot[7][z])
+        wid.append(spot[3][z][0]-spot[2][z][0])
         #drop_pos.append((spot[0][spot[2][z]]+spot[0][spot[3][z]])/2)
         drop_pos.append(spot[8][z]) #center of mass
         ax1.plot(hzt[spot[5][z]], spot[4][z],'*') #just max index, not fit position
@@ -351,6 +356,7 @@ for k in range(200):
     plt.show()
 
     heights.append(h)
+    widths.append(wid)
     rs.append(r)
     grads.append(grad)
     positions.append(pos)
@@ -358,16 +364,18 @@ for k in range(200):
     vol.append(volumes)
     times.append(timer)
     midpoint_heights.append(spot[9])
+    midpoint_heightsloc.append(spot[10])
 
 
 
 length = len(sorted(grads,key=len, reverse=True)[0])
-pos_array= np.array([xi+[0]*(length-len(xi)) for xi in positions])*1.39
+pos_array= np.array([xi+[0]*(length-len(xi)) for xi in positions])*pixtomic
 grad_array =np.array([xi+[0]*(length-len(xi)) for xi in grads])/2
-rs_array =np.array([xi+[0]*(length-len(xi)) for xi in rs])*1.39
-heights_array =np.array([xi+[0]*(length-len(xi)) for xi in heights])*1.39/2
-drop_pos_array = np.array([xi+[0]*(length-len(xi)) for xi in drops_positions])*1.39
+rs_array =np.array([xi+[0]*(length-len(xi)) for xi in rs])*pixtomic
+heights_array =np.array([xi+[0]*(length-len(xi)) for xi in heights])*pixtomic/2
+drop_pos_array = np.array([xi+[0]*(length-len(xi)) for xi in drops_positions])*pixtomic
 time_array = np.array([xi+[0]*(length-len(xi)) for xi in times])/1000
+width_array = np.array([xi+[0]*(length-len(xi)) for xi in widths])*pixtomic
 
 '''for k in range(len(time_array[:,1])):
     if time_array[k,1] > cut_off_time:
@@ -396,4 +404,7 @@ np.savetxt(directory +'drop_height.csv', heights_array)
 np.savetxt(directory +'gradients.csv', grad_array)
 np.savetxt(directory +'drop_piprad.csv', rs_array)
 np.savetxt(directory +'times.csv', time_array)
+np.savetxt(directory +'widths.csv', width_array)
+
 np.savetxt(directory+'midpoints.csv', midpoint_heights)
+np.savetxt(directory+'midpointsloc.csv', midpoint_heightsloc)
